@@ -72,7 +72,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--export_only',
         help='Only export the model from the model_dir, ready for serving',
-        default=True,
+        default=False,
         type=bool
     )
     parser.add_argument(

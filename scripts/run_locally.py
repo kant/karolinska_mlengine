@@ -7,7 +7,7 @@ if __name__ == "__main__":
     cmd = "python -m src.trainer.task"
     if local:
         cmd = "%s %s" % (cmd, "--data_dir /home/adamf/data/Karolinska/tfrecords_512")
-        cmd = "%s %s" % (cmd, "--output_dir /home/adamf/data/Karolinska/model_3")
+        cmd = "%s %s" % (cmd, "--output_dir /home/adamf/data/Karolinska/model_4")
     else:
         cmd = "%s %s" % (cmd, "--data_dir /hdd/Karolinska/tfrecords_512")
         cmd = "%s %s" % (cmd, "--output_dir /hdd/users/adamf/models/Karolinska/attempt_21")
@@ -16,4 +16,5 @@ if __name__ == "__main__":
     cmd = "%s %s" % (cmd, "--model_type %s" % 'simple')
     cmd = "%s %s" % (cmd, "--save_checkpoints_steps %s" % 500)
     cmd = "%s %s" % (cmd, "--save_summary_steps %s" % 2)
+    raise
     os.system(cmd)

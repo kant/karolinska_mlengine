@@ -68,9 +68,11 @@ def read_and_decode(record, ftr_shape, lbl_shape, padding):
     label_img = tf.decode_raw(parsed['label/img'], tf.uint8)
     label_img = tf.cast(tf.greater(label_img, 125), tf.int32)
     label_img = tf.reshape(label_img, lbl_shape)
+    label_img = tf.squeeze(label_img)
     weight_img = tf.decode_raw(parsed['weight/img'], tf.uint8)
     weight_img = tf.cast(weight_img, tf.float32) / 255.0
     weight_img = tf.reshape(weight_img, lbl_shape)
+    weight_img = tf.squeeze(weight_img)
 
     # We need to increase the size of the input image, if padding is set to "VALID"
     if padding == 'VALID':
