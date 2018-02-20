@@ -6,18 +6,29 @@ import tensorflow as tf
 from tensorflow.python.estimator.model_fn import ModeKeys as Modes
 from src.lib.fileops import get_all_files_containing
 from src.lib.tfops import pad_to_desired_3D
-from data_aug.semantic_segmentation.get_data import get_example
 
 tf.logging.set_verbosity(tf.logging.INFO)
 
 def parse_single_example(record):
     """Parses a single feature."""
-    raise Exception('Implement this')
+    feature = {'feature/img': tf.FixedLenFeature([], tf.string),
+               'feature/height': tf.FixedLenFeature([], tf.int64),
+               'feature/width': tf.FixedLenFeature([], tf.int64),
+               'feature/channels': tf.FixedLenFeature([], tf.int64),
+               'label/img': tf.FixedLenFeature([], tf.string),
+               'label/height': tf.FixedLenFeature([], tf.int64),
+               'label/width': tf.FixedLenFeature([], tf.int64),
+               'label/channels': tf.FixedLenFeature([], tf.int64),
+               'weight/img': tf.FixedLenFeature([], tf.string),
+               'weight/height': tf.FixedLenFeature([], tf.int64),
+               'weight/width': tf.FixedLenFeature([], tf.int64),
+               'weight/channels': tf.FixedLenFeature([], tf.int64)
+               }
 
     return tf.parse_single_example(record, feature)
 
 
-def read_and_decode(record, ftr_shape, lbl_shape, padding, data_aug=None):
+def read_and_decode(record, ftr_shape, lbl_shape, padding):
     """Given a a tf.TFRecordReader().read output, return the decoded sample.
 
     The sizes of the tensor need to be "hardcoded" when creating a TF graph.
@@ -38,7 +49,35 @@ def read_and_decode(record, ftr_shape, lbl_shape, padding, data_aug=None):
         The label image
     """
     parsed = parse_single_example(record)
-    raise Exception('Implement this')
+
+    # Get the sizes
+    ftr_height = tf.cast(parsed['feature/height'], tf.int32)
+    ftr_width = tf.cast(parsed['feature/width'], tf.int32)
+    ftr_channel = tf.cast(parsed['feature/channels'], tf.int32)
+    lbl_height = tf.cast(parsed['label/height'], tf.int32)
+    lbl_width = tf.cast(parsed['label/width'], tf.int32)
+    lbl_channel = tf.cast(parsed['label/channels'], tf.int32)
+    wgt_height = tf.cast(parsed['label/height'], tf.int32)
+    wgt_width = tf.cast(parsed['label/width'], tf.int32)
+    wgt_channel = tf.cast(parsed['label/channels'], tf.int32)
+
+    # read, decode and normalize image
+    feature_img = tf.decode_raw(parsed['feature/img'], tf.uint8)
+    feature_img = tf.cast(feature_img, tf.float32) * (1. / 255) - 0.5
+    feature_img = tf.reshape(feature_img, ftr_shape)
+    label_img = tf.decode_raw(parsed['label/img'], tf.uint8)
+    label_img = tf.cast(tf.greater(label_img, 125), tf.int32)
+    label_img = tf.reshape(label_img, lbl_shape)
+    weight_img = tf.decode_raw(parsed['weight/img'], tf.uint8)
+    weight_img = tf.cast(weight_img, tf.float32) / 255.0
+    weight_img = tf.reshape(weight_img, lbl_shape)
+
+    # We need to increase the size of the input image, if padding is set to "VALID"
+    if padding == 'VALID':
+        feature_img = tf.reshape(
+            pad_to_desired_3D(feature_img, [780, 780, 1]),
+            [780, 780, 1]
+        )
 
     return feature_img, label_img, weight_img
 
@@ -138,7 +177,7 @@ def get_input_fn(input_type, data_dir, **kwargs):
     # Fetch the tfrecords
     records = get_all_files_containing(data_dir, input_type, 'tfrecords')
 
-    return get_input_feeder(records, params, data_aug)
+    return get_input_feeder(records, params)
 
 def get_tf_record_image_size(data_dir):
     """Determine the image size in the tfrecords.
@@ -183,4 +222,4 @@ def get_tf_record_image_size(data_dir):
 
 
 if __name__ == "__main__":
-    print(get_tf_record_image_size('/home/adamf/data/carvana/tfrecords'))
+    print(get_tf_record_image_size('/home/adamf/data/Karolinska/tfrecords_512'))
