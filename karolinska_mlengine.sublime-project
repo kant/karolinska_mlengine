@@ -1,0 +1,114 @@
+{
+	"build_setup":
+	[
+		{
+			"docker_GPU_Nr":
+			[
+				0
+			],
+			"docker_gui_active": true,
+			"docker_image_exe": "python",
+			"docker_index": 0,
+			"docker_mount":
+			[
+				"/home/adamf/data/"
+			],
+			"docker_run_as_relative": true,
+			"docker_ssh_ip": "protolab@10.0.1.173",
+			"docker_use_cpu_only": true,
+			"docker_use_ssh": false,
+			"name": "TF_CPU:1.4.0-py3",
+			"run_local": false
+		},
+		{
+			"docker_GPU_Nr":
+			[
+				0
+			],
+			"docker_gui_active": true,
+			"docker_image_exe": "python3",
+			"docker_index": 1,
+			"docker_mount":
+			[
+				"/home/adamf/data/"
+			],
+			"docker_run_as_relative": true,
+			"docker_ssh_ip": "protolab@10.0.1.173",
+			"docker_use_cpu_only": false,
+			"docker_use_ssh": false,
+			"name": "SSH-TF_GPU:1.4.0-py3",
+			"run_local": false
+		}
+
+	],
+	"build_systems":
+	[
+		{
+			"name": "TF_CPU:1.4.0-py3",
+			"selector": "source.python",
+			"target": "custom_builder",
+			"type": "RUN"
+		},
+		{
+			"name": "SSH-TF_GPU:1.4.0-py3",
+			"selector": "source.python",
+			"target": "custom_builder",
+			"type": "RUN"
+		},
+		{
+			"file_regex": "^[ ]*File \"(...*?)\", line ([0-9]*)",
+			"name": "Anaconda Python Builder",
+			"selector": "source.python",
+			"shell_cmd": "\"python\" -u \"$file\""
+		}
+	],
+	"docker_setup":
+	[
+		{
+			"name": "tf_cpu",
+			"tag": "carvana"
+		},
+		{
+			"name": "tf_gpu",
+			"tag": "carvana"
+		}
+	],
+	"folders":
+	[
+		{
+			"file_exclude_patterns":
+			[
+				"*Icon*",
+				".pyc"
+			],
+			"folder_exclude_patterns":
+			[
+				"__pycache__",
+				"logs"
+			],
+			"path": "."
+		}
+	],
+    /*
+        Interpreter settings, set the port to a unique port if you have multiple projects open
+    */
+    "interpreter":
+    {
+            "active": true,
+            "port": 19050
+    },
+
+    /*
+    General settings
+        -python_interpreter         : Points to the interpreter to use, notice the port is the same as above!
+        -rulers                     : Visualizes a ruler at the N character length mark
+        -pep8_max_line_length       : Pep8 setting overwrite
+    */
+    "settings": 
+    {
+        "python_interpreter": "tcp://localhost:19050",
+        "anaconda_linter_mark_style": "none",
+        "rulers": [120],
+        "pep8_max_line_length": 120 
+    }
+}

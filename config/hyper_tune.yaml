@@ -1,0 +1,30 @@
+trainingInput:
+  # Use a cluster with many workers and a few parameter servers.
+  # Avaialble tiers: STANDARD_1, BASIC_GPU, PREMIUM_1
+  scaleTier: CUSTOM
+  masterType: complex_model_m
+  workerType: complex_model_m
+  parameterServerType: large_model
+  workerCount: 9
+  parameterServerCount: 3
+  hyperparameters:
+    goal: MAXIMIZE
+    maxTrials: 30
+    maxParallelTrials: 1
+    enableTrialEarlyStopping: True
+    params:
+    - parameterName: learning_rate
+      type: DOUBLE
+      minValue: 0.00005
+      maxValue: 0.001
+      scaleType: UNIT_LINEAR_SCALE
+    - parameterName: l2_gain
+      type: DOUBLE
+      minValue: 0.0001
+      maxValue: 0.0005
+      scaleType: UNIT_LINEAR_SCALE
+    - parameterName: rmsprop_momentum
+      type: DOUBLE
+      minValue: 0.7
+      maxValue: 0.95
+      scaleType: UNIT_LINEAR_SCALE
