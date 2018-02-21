@@ -1,5 +1,6 @@
 import tensorflow as tf
 import random
+import numpy as np
 import argparse
 import os
 from math import ceil
@@ -30,6 +31,11 @@ def _get_img_img_example(feature_path, label_path, weight_path, size=(), scale=N
     ftr, ftr_shape = imgops.load_image(feature_path, size=size, scale=scale)
     lbl, lbl_shape = imgops.load_image(label_path, size=size, scale=scale)
     wgt, wgt_shape = imgops.load_image(weight_path, size=size, scale=scale)
+    erg = imgops.process_single_label(lbl)
+
+    # Convert our instance label array into a binary mask
+    lbl = (lbl > 0).astype(np.uint8)
+
     feature = {
         'feature/img': common._bytes_feature(tf.compat.as_bytes(ftr.tostring())),
         'feature/height': common._int64_feature(ftr_shape[0]),
@@ -42,7 +48,8 @@ def _get_img_img_example(feature_path, label_path, weight_path, size=(), scale=N
         'weight/img': common._bytes_feature(tf.compat.as_bytes(wgt.tostring())),
         'weight/height': common._int64_feature(wgt_shape[0]),
         'weight/width': common._int64_feature(wgt_shape[1]),
-        'weight/channels': common._int64_feature(wgt_shape[2])
+        'weight/channels': common._int64_feature(wgt_shape[2]),
+        'energy/img': common._bytes_feature(tf.compat.as_bytes(erg.tostring())),
     }
 
     return tf.train.Example(features=tf.train.Features(feature=feature))

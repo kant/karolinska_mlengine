@@ -314,5 +314,100 @@ def plot_sample_from_tf_record(data_dir):
     plot_image_from_array([image, mask[0, ::]])
 
 
+def edt_from_mask(mask_image):
+    """Given a mask, create the directional gradients and energy map.
+
+    The energy map is then binned into 16 distinct bins. The interval of each
+    bin is taken from the original authors implementation, where he does not
+    comment in detail why those were chosen.
+
+    boundaries = [0,1,2,3,4,5,7,9,12,15,19,24,30,37,45,54,Inf];
+
+    Parameters
+    ----------
+    mask_image : str or numpy array
+        Path to image, or an boolean numpy array of size (W, H)
+    pixel_boundary : TYPE, optional
+        Description
+
+    Returns
+    -------
+    Numpy array
+        (W, H, 2) gradient direction mask
+
+    Deleted Parameters
+    ------------------
+    debug_plot : bool, optional
+        Plot the results or not
+    """
+    # The first bin MUST start with 0
+    image_etc = ndimage.distance_transform_edt(mask_image)
+    
+    # Scale with shape
+    PIXEL_BOUNDARY = [0,1,2,3,4,5,7,9,12,15,17,19,22,24,26,28,1000]
+    ratio = int(float(mask_image.shape[0]) / 512.0)
+    pixel_boundary = [int(val * ratio) for val in PIXEL_BOUNDARY]
+    assert pixel_boundary[0] == 0
+
+    # Calculate the gradient
+    image_grad_y, image_grad_x = np.gradient(image_etc)
+    image_grad_norm = np.sqrt(image_grad_x**2 + image_grad_y**2)
+
+    # Ignore divide by zero warning
+    with np.errstate(divide='ignore', invalid='ignore'):
+        image_grad_y = np.divide(image_grad_y, image_grad_norm)
+        image_grad_x = np.divide(image_grad_x, image_grad_norm)
+
+    # Fix for zero gradients (the boundary)
+    image_grad_y[image_grad_norm == 0] = 0
+    image_grad_x[image_grad_norm == 0] = 0
+
+    # Get the one-hot energy, but as integers, not seperate layers
+    one_hot = np.digitize(image_etc, pixel_boundary).astype(np.int32)
+
+    # Where the background is, set to zero
+    one_hot[image_etc == 0] = 0
+
+    return np.stack([image_grad_x, image_grad_y], -1), one_hot
+
+
+def get_gradient_and_energy(loaded_label):
+
+    # Get unique instances
+    idx_instance = np.unique(loaded_label)
+
+    # Remove 0
+    idx_instance = np.delete(idx_instance, np.where(idx_instance == 0)[0])
+
+    # Pre-allocated size
+    shape = [len(idx_instance)] + list(loaded_label.shape)
+
+    # Now, we need to create the gradient maps and watershed energy
+    # for each instance mask.
+    energy_map = np.zeros(shape=shape, dtype=np.float64)
+    gradient_map = np.stack([energy_map.copy(), energy_map.copy()], -1)
+
+    for idx, i_ener, i_grad in zip(idx_instance, energy_map, gradient_map):
+        gradient, energy = edt_from_mask(loaded_label == idx)
+        i_ener += energy
+        i_grad += gradient
+
+    # Now merge all instances
+    merged_gradient = np.sum(gradient_map, axis=0)
+    merged_energy = np.sum(energy_map, axis=0)
+
+    # Set background to 0
+    merged_energy[loaded_label == 0] = 0
+
+    assert merged_energy.max() <= 16
+
+    return merged_energy, merged_gradient
+
+
+def process_single_label(loaded_label):
+    merged_energy, merged_gradient = get_gradient_and_energy(loaded_label)
+    return merged_energy.astype(np.uint8)
+
+
 if __name__ == "__main__":
     plot_sample_from_tf_record('')
