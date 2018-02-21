@@ -42,7 +42,7 @@ def deconv2d_resize(inputs,
     resized = tf.image.resize_nearest_neighbor(inputs, [height, width])
 
     return tf.layers.conv2d(resized, filters,
-                            kernel_size=(3, 3),
+                            kernel_size=kernel_size,
                             padding='SAME',
                             strides=(1, 1),
                             reuse=reuse,

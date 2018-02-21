@@ -13,7 +13,7 @@ config = "config/ml_config.yaml"
 data_dir = "%s/tfrecords_512_energy" % bucket
 output_dir = "%s/%s" % (bucket, job_id)
 train_steps = 6000
-model_type = 'unet'
+model_type = 'medium'
 batch_size = 1
 save_checkpoints_steps = 100
 eval_delay_secs = 5
@@ -36,5 +36,4 @@ cmd = "%s \\\n\t%s" % (cmd, "--output_dir %s" % output_dir)
 cmd = "%s \\\n\t%s" % (cmd, "--train_steps %s" % train_steps)
 cmd = "%s \\\n\t%s" % (cmd, "--model_type %s" % model_type)
 cmd = "%s \\\n\t%s" % (cmd, "--save_checkpoints_steps %s" % save_checkpoints_steps)
-cmd = "%s \\\n\t%s" % (cmd, "--learning_rate %d" % 0.00005)
 print(cmd)

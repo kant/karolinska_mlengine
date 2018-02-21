@@ -1,10 +1,13 @@
 import os
 import tensorflow as tf
+import numpy as np
 from tensorflow.python.estimator.model_fn import ModeKeys as Modes
 from importlib import import_module
 from src.lib.tfops import batch_base64_to_tensor
 
-BIN_WEIGHTS = [3.0, 3.0, 3.0, 2.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+BIN_WEIGHTS = [1.0, 3.0, 3.0, 3.0, 2.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+BIN_WEIGHTS = np.array(BIN_WEIGHTS)
+BIN_WEIGHTS = np.divide(BIN_WEIGHTS, BIN_WEIGHTS.sum())
 
 def _cnn_model_fn(features, labels, mode, params):
     """Creates the model function.

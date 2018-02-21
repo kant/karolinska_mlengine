@@ -342,9 +342,9 @@ def edt_from_mask(mask_image):
     """
     # The first bin MUST start with 0
     image_etc = ndimage.distance_transform_edt(mask_image)
-    
+
     # Scale with shape
-    PIXEL_BOUNDARY = [0,1,2,3,4,5,7,9,12,15,17,19,22,24,26,28,1000]
+    PIXEL_BOUNDARY = [0, 1, 2, 3, 4, 5, 7, 9, 12, 14, 16, 18, 20, 24, 28]
     ratio = int(float(mask_image.shape[0]) / 512.0)
     pixel_boundary = [int(val * ratio) for val in PIXEL_BOUNDARY]
     assert pixel_boundary[0] == 0
@@ -362,11 +362,12 @@ def edt_from_mask(mask_image):
     image_grad_y[image_grad_norm == 0] = 0
     image_grad_x[image_grad_norm == 0] = 0
 
-    # Get the one-hot energy, but as integers, not seperate layers
-    one_hot = np.digitize(image_etc, pixel_boundary).astype(np.int32)
-
-    # Where the background is, set to zero
-    one_hot[image_etc == 0] = 0
+    # Get the one-hot energy, but as integers, not seperate layers.
+    # We need to set the background as -1 before doing anything else, so that it gets put into the
+    # <-inf, 0> bin
+    image_etc_new = image_etc.copy()
+    image_etc_new[image_etc_new == 0] = -1
+    one_hot = np.digitize(image_etc_new, pixel_boundary).astype(np.uint8)
 
     return np.stack([image_grad_x, image_grad_y], -1), one_hot
 
@@ -396,10 +397,8 @@ def get_gradient_and_energy(loaded_label):
     merged_gradient = np.sum(gradient_map, axis=0)
     merged_energy = np.sum(energy_map, axis=0)
 
-    # Set background to 0
-    merged_energy[loaded_label == 0] = 0
-
-    assert merged_energy.max() <= 16
+    # We should have at most 16 different values, the max is then 16-1 = 15
+    assert merged_energy.max() <= 15
 
     return merged_energy, merged_gradient
 
