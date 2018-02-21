@@ -15,6 +15,6 @@ if __name__ == "__main__":
     cmd = "%s %s" % (cmd, "--train_steps %s" % 25000)
     cmd = "%s %s" % (cmd, "--model_type %s" % 'simple')
     cmd = "%s %s" % (cmd, "--save_checkpoints_steps %s" % 500)
-    cmd = "%s %s" % (cmd, "--save_summary_steps %s" % 2)
-    raise
+    cmd = "%s %s" % (cmd, "--save_summary_steps %s" % 1)
+
     os.system(cmd)

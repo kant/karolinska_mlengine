@@ -3,6 +3,7 @@ import numpy as np
 import os
 
 from src.lib.imgops import plot_image_from_array, image_to_base64_websafe_resize, load_image
+from src.lib.fileops import get_all_files
 
 class MakeQuery():
     def __init__(self, project, model, version=None, client_secret=None):
@@ -39,7 +40,8 @@ class MakeQuery():
 
 if __name__ == "__main__":
     # TODO: Add argparse
-    image_test = '/home/adamf/data/Karolinska/images/Nuclei_22.png'
+    """
+    image_test = '/home/adamf/data/Karolinska/images/Nuclei_3.png'
     mq = MakeQuery('karolinska-188312', 'karolinska', 'v3')
     response = mq.get_prediction([image_test])
     mask_response = response['predictions'][0]['classes']
@@ -60,3 +62,9 @@ if __name__ == "__main__":
     mask_probability = np.array(response['predictions'][0]['probabilities'])
     for i_level in [0.25, 0.5, 0.75]:
         apply_tinge(org_image, mask_probability[:, :, 1] > i_level)
+    """
+    all_images = get_all_files("/home/adamf/data/Karolinska/images/")
+    mq = MakeQuery('karolinska-188312', 'karolinska', 'v3')
+    n_images = len(all_images)
+    for i, image in enumerate(all_images):
+        response = mq.get_prediction([image])

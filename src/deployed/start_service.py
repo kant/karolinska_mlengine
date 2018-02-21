@@ -21,7 +21,7 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-    # cmd = "gcloud ml-engine models create %s" % args.model_name
+    cmd = "gcloud ml-engine models create %s" % args.model_name
     cmd = "gcloud ml-engine versions create %s --model %s --origin %s --runtime-version=1.4" % \
         (args.version, args.model_name, args.bucket_path)
     os.system(cmd)
