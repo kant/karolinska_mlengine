@@ -3,6 +3,7 @@ import numpy as np
 import os
 from PIL import Image
 import argparse
+import cv2
 
 from src.lib.imgops import plot_image_from_array, array_to_base64_websafe_resize, \
     load_image, image_to_base64_websafe_resize
@@ -29,14 +30,20 @@ def image_to_websafe_mask(image_path):
     return input_list
 
 
-def apply_tinge(org_path, prediction):
+def apply_tinge(org_path, prediction, threshold=1):
     # Load and make the predicted cells a bit more red
     img, _ = load_image(org_path, size=(512, 512))
-    original = np.stack([img] * 3, 2)
-    original[:, :, 0] = 0
-    original[:, :, 0] = prediction*15
+    gain = np.floor(255 / prediction.max())
+    org = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
 
-    return original
+    pred = prediction > threshold
+    pred = np.stack([pred.astype(np.uint8)] * 3, 2)
+    pred = cv2.cvtColor(255*pred, cv2.COLOR_RGB2GRAY)
+    _, contours, _ = cv2.findContours(pred.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    # Draw them onto the rgb image
+    org = cv2.drawContours(org.copy(), contours, -1, (255, 0), 0)
+
+    return org
 
 
 if __name__ == "__main__":
@@ -61,6 +68,12 @@ if __name__ == "__main__":
         help='Path to save the output prediction',
         required=True
     )
+    parser.add_argument(
+        '--energy_threshold',
+        help='Which energy contour to plot',
+        default=0,
+        type=int
+    )
     args = parser.parse_args()
 
     if not os.path.exists(args.output_location):
@@ -81,6 +94,6 @@ if __name__ == "__main__":
         mask_response = watershed_predictor(safe)
         predicted_energy = np.squeeze(mask_response['classes'])
 
-        img = Image.fromarray(apply_tinge(image, predicted_energy))
+        img = Image.fromarray(apply_tinge(image, predicted_energy, args.energy_threshold))
         save_path = os.path.join(args.output_location, os.path.basename(image))
         img.save(save_path)

@@ -7,7 +7,7 @@ if __name__ == "__main__":
     cmd = "python -m src.trainer_watershed.task"
     if local:
         cmd = "%s %s" % (cmd, "--data_dir /home/adamf/data/Karolinska/tfrecords_512_energy")
-        cmd = "%s %s" % (cmd, "--output_dir /home/adamf/data/Karolinska/watershed_15")
+        cmd = "%s %s" % (cmd, "--output_dir /home/adamf/data/watershed/google_chkps/")
     else:
         cmd = "%s %s" % (cmd, "--data_dir /hdd/Karolinska/tfrecords_512")
         cmd = "%s %s" % (cmd, "--output_dir /hdd/users/adamf/models/Karolinska/attempt_21")
@@ -17,5 +17,6 @@ if __name__ == "__main__":
     cmd = "%s %s" % (cmd, "--save_checkpoints_steps %s" % 500)
     cmd = "%s %s" % (cmd, "--save_summary_steps %s" % 1)
     cmd = "%s %s" % (cmd, "--min_eval_frequency %s" % 1)
+    cmd = "%s %s" % (cmd, "--export_only %s" % 1)
 
     os.system(cmd)

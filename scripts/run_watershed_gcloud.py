@@ -2,6 +2,7 @@
 import datetime
 
 job_id = "adamf_%s" % datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+job_id = "adamf_20180222_102709"
 project_id = 'karolinska-188312'
 package_path = "src"
 module_name = "src.trainer_watershed.task"
@@ -36,4 +37,5 @@ cmd = "%s \\\n\t%s" % (cmd, "--output_dir %s" % output_dir)
 cmd = "%s \\\n\t%s" % (cmd, "--train_steps %s" % train_steps)
 cmd = "%s \\\n\t%s" % (cmd, "--model_type %s" % model_type)
 cmd = "%s \\\n\t%s" % (cmd, "--save_checkpoints_steps %s" % save_checkpoints_steps)
+cmd = "%s \\\n\t%s" % (cmd, "--export_only %s" % 1)
 print(cmd)

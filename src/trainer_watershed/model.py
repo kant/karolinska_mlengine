@@ -53,18 +53,6 @@ def _cnn_model_fn(features, labels, mode, params):
         probabilities = tf.nn.softmax(logits, name='softmax_tensor')
         predicted_pixels = tf.argmax(input=logits, axis=-1)
 
-        # Use the mask to remove area that is not used.
-        # I.E we are telling the network to ONLY focus on the already
-        # segmented area rather than creating new ones itself.
-        probabilities = tf.multiply(
-            probabilities,
-            tf.cast(features['mask'], tf.float32),
-            name='probabilty_fix')
-        predicted_pixels = tf.multiply(
-            predicted_pixels,
-            tf.cast(tf.squeeze(features['mask'], -1), tf.int64),
-            name='prediction_fix')
-
     # During training and evaluation, we calculate the loss
     if mode in (Modes.TRAIN, Modes.EVAL):
         global_step = tf.train.get_or_create_global_step()
