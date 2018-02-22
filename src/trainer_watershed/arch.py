@@ -115,27 +115,29 @@ def medium(features, mode, hparams, scope='medium_network'):
         net.append(tf.layers.batch_normalization(net[-1], training=is_training))
 
         # Deconv
-        net.append(tfops.deconv2d_resize(inputs=net[-1],
-                                         filters=16,
-                                         kernel_size=[3, 3],
-                                         padding="same",
-                                         activation=tf.nn.relu))
-        net.append(tf.layers.batch_normalization(net[-1], training=is_training))
+        with tf.variable_scope('Deoder'):
+            with tf.variable_scope('Resize_1'):
+                net.append(tfops.deconv2d_resize(inputs=net[-1],
+                                                 filters=16,
+                                                 kernel_size=[3, 3],
+                                                 padding="same",
+                                                 activation=tf.nn.relu))
+                net.append(tf.layers.batch_normalization(net[-1], training=is_training))
 
-        net.append(tfops.deconv2d_resize(inputs=net[-1],
-                                         filters=16,
-                                         kernel_size=[5, 5],
-                                         padding="same",
-                                         activation=tf.nn.relu))
-        net.append(tf.layers.batch_normalization(net[-1], training=is_training))
+            with tf.variable_scope('Resize_2'):
+                net.append(tfops.deconv2d_resize(inputs=net[-1],
+                                                 filters=16,
+                                                 kernel_size=[5, 5],
+                                                 padding="same",
+                                                 activation=tf.nn.relu))
+                net.append(tf.layers.batch_normalization(net[-1], training=is_training))
 
-        net.append(tfops.deconv2d_resize(inputs=net[-1],
-                                         filters=16,
-                                         kernel_size=[7, 7],
-                                         padding="same"))
+            with tf.variable_scope('Resize_3'):
+                net.append(tfops.deconv2d_resize(inputs=net[-1],
+                                                 filters=16,
+                                                 kernel_size=[7, 7],
+                                                 padding="same"))
 
-        for i in net:
-            print(i)
         return net[-1]
 
 

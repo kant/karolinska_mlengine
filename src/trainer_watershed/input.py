@@ -67,7 +67,7 @@ def read_and_decode(record, ftr_shape, lbl_shape, padding):
     feature_img = tf.cast(feature_img, tf.float32) * (1. / 255) - 0.5
     feature_img = tf.reshape(feature_img, ftr_shape)
     label_img = tf.decode_raw(parsed['label/img'], tf.uint8)
-    label_img = tf.cast(tf.greater(label_img, 125), tf.float32)
+    label_img = tf.cast(label_img, tf.float32)
     label_img = tf.reshape(label_img, lbl_shape)
     weight_img = tf.decode_raw(parsed['weight/img'], tf.uint8)
     weight_img = tf.cast(weight_img, tf.float32) / 255.0

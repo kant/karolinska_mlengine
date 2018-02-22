@@ -100,6 +100,34 @@ def image_to_base64_websafe_resize(image_path, size):
     return image_content
 
 
+def array_to_base64_websafe_resize(array):
+    """Converts an image into a websafe base64 format.
+
+    Parameters
+    ----------
+    array : np.array
+        Array to transform (image array)
+    size : TYPE
+        Desired size to convert the iamge to
+
+    Returns
+    -------
+    base64
+        Web safe base64 format
+
+    """
+    img = Image.fromarray(array)
+    img_bytes = BytesIO()
+    img.save(img_bytes, format='PNG')
+
+    image_content = base64.b64encode(img_bytes.getvalue()).decode('utf-8')
+    # Websafe means that + and / are eplaced with - and _
+    image_content = image_content.replace('+', '-')
+    image_content = image_content.replace('/', '_')
+
+    return image_content
+
+
 def create_weight_map(mask_path, effective_pix=100, sigma=0.05, weight=15):
     """Create an exponential weighting mask for a mask image.
 
@@ -409,4 +437,4 @@ def process_single_label(loaded_label):
 
 
 if __name__ == "__main__":
-    plot_sample_from_tf_record('')
+    array_to_base64_websafe_resize(np.ones((5, 5, 2), dtype=np.uint8))

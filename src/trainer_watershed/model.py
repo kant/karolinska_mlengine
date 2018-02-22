@@ -7,7 +7,7 @@ from src.lib.tfops import batch_base64_to_tensor
 
 BIN_WEIGHTS = [1.0, 3.0, 3.0, 3.0, 2.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
 BIN_WEIGHTS = np.array(BIN_WEIGHTS)
-BIN_WEIGHTS = np.divide(BIN_WEIGHTS, BIN_WEIGHTS.sum())
+BIN_WEIGHTS = np.divide(BIN_WEIGHTS, BIN_WEIGHTS.sum()).astype(np.float32)
 
 def _cnn_model_fn(features, labels, mode, params):
     """Creates the model function.
@@ -45,12 +45,25 @@ def _cnn_model_fn(features, labels, mode, params):
 
     # Logits Layer
     logits = model_arch(cat_img, mode, params)
+    logits = tf.multiply(logits, tf.cast(features['mask'], tf.float32))
 
     # If this is a prediction or evaluation mode, then we return
     # the class probabilities and the guessed pixel class
     if mode in (Modes.TRAIN, Modes.EVAL, Modes.PREDICT):
         probabilities = tf.nn.softmax(logits, name='softmax_tensor')
         predicted_pixels = tf.argmax(input=logits, axis=-1)
+
+        # Use the mask to remove area that is not used.
+        # I.E we are telling the network to ONLY focus on the already
+        # segmented area rather than creating new ones itself.
+        probabilities = tf.multiply(
+            probabilities,
+            tf.cast(features['mask'], tf.float32),
+            name='probabilty_fix')
+        predicted_pixels = tf.multiply(
+            predicted_pixels,
+            tf.cast(tf.squeeze(features['mask'], -1), tf.int64),
+            name='prediction_fix')
 
     # During training and evaluation, we calculate the loss
     if mode in (Modes.TRAIN, Modes.EVAL):
@@ -69,7 +82,6 @@ def _cnn_model_fn(features, labels, mode, params):
         # Total weight becomes
         total_weight = tf.multiply(softmax, pix_weighted_op)
         loss = tf.reduce_sum(total_weight)
-
         tf.summary.scalar('OptimizeLoss', loss)
         tf.summary.image('Feature', features['inputs'])
         tf.summary.image('Label', 15 * tf.expand_dims(tf.cast(labels['label'], tf.uint8), 3))
@@ -155,14 +167,26 @@ def build_estimator(run_config, hparams):
 
 
 def parse_incoming_tensors(incoming):
-    img = tf.reshape(incoming, [-1, 512, 512, 1])
-    return tf.cast(img, tf.float32) * (1. / 255) - 0.5
+    incoming = tf.reshape(incoming, [-1, 512, 512, 2])
+    img, mask = tf.unstack(incoming, axis=-1)
+
+    img = tf.cast(img, tf.float32) * (1. / 255) - 0.5
+    mask = tf.cast(mask, tf.float32)
+
+    # Add 3rd dimension again
+    img = tf.expand_dims(img, 3)
+    mask = tf.expand_dims(mask, 3)
+    return img, mask
 
 
 def serving_input_fn():
     """Input function to use when serving the model."""
     inputs = tf.placeholder(tf.string, shape=(None, ))
     feature_input = batch_base64_to_tensor(inputs)
-    feature_input = {'inputs': parse_incoming_tensors(feature_input)}
+    img, mask = parse_incoming_tensors(feature_input)
+    feature_input = {
+        'inputs': img,
+        'mask': mask
+    }
 
     return tf.estimator.export.ServingInputReceiver(feature_input, inputs)
